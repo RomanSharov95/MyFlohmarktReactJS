@@ -110,44 +110,45 @@ const Home = () => {
       </section>
 
       {/* 4. TAB BAR: Фон на всю ширину, иконки в центре */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-100 z-50">
-        <div className="max-w-[1080px] mx-auto px-6 md:px-12 py-4 flex justify-between items-center">
-          
-          {/* Flohmärkte (Active) */}
-          <div className="flex flex-col items-center gap-1 cursor-pointer">
-            <div className="bg-[#52A7E0] px-4 py-1.5 rounded-2xl text-white shadow-md shadow-[#52A7E0]/30 transition-all flex items-center justify-center">
-               <span className="text-lg">🏠</span>
-            </div>
-            <span className="text-[10px] font-bold text-[#52A7E0] uppercase tracking-tighter">Flohmärkte</span>
-          </div>
+{/* Обновленный Tab Bar с Bootstrap Icons */}
+<nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-100 z-50">
+  <div className="max-w-[1080px] mx-auto px-6 md:px-12 py-4 flex justify-between items-center">
+    
+    {/* Flohmärkte */}
+    <div className="flex flex-col items-center gap-1 cursor-pointer group">
+      <div className="bg-[#52A7E0] px-4 py-1.5 rounded-2xl text-white shadow-md">
+         <i className="bi bi-house-door-fill text-xl"></i>
+      </div>
+      <span className="text-[10px] font-bold text-[#52A7E0] uppercase">Flohmärkte</span>
+    </div>
 
-          {/* Inserate */}
-          <div className="flex flex-col items-center gap-1 opacity-40 hover:opacity-100 transition-all cursor-pointer">
-            <span className="text-2xl">🏷️</span>
-            <span className="text-[10px] font-bold text-[#1E293B] uppercase tracking-tighter">Inserate</span>
-          </div>
+    {/* Inserate */}
+    <div className="flex flex-col items-center gap-1 opacity-40 hover:opacity-100 transition-all">
+      <i className="bi bi-tag text-2xl text-[#1E293B]"></i>
+      <span className="text-[10px] font-bold text-[#1E293B] uppercase">Inserate</span>
+    </div>
 
-          {/* Floating Action Button (+) */}
-          <div className="relative -top-3">
-            <button className="bg-[#3D5A80] text-white w-16 h-16 rounded-full flex items-center justify-center shadow-xl shadow-[#3D5A80]/40 text-4xl font-light hover:scale-110 active:scale-95 transition-all border-4 border-white">
-              +
-            </button>
-          </div>
+    {/* Кнопка + */}
+    <div className="relative -top-3">
+      <button className="bg-[#3D5A80] text-white w-16 h-16 rounded-full flex items-center justify-center shadow-xl border-4 border-white">
+        <i className="bi bi-plus-lg text-3xl"></i>
+      </button>
+    </div>
 
-          {/* Favoriten */}
-          <div className="flex flex-col items-center gap-1 opacity-40 hover:opacity-100 transition-all cursor-pointer">
-            <span className="text-2xl">❤️</span>
-            <span className="text-[10px] font-bold text-[#1E293B] uppercase tracking-tighter">Favoriten</span>
-          </div>
+    {/* Favoriten */}
+    <div className="flex flex-col items-center gap-1 opacity-40 hover:opacity-100 transition-all">
+      <i className="bi bi-heart text-2xl text-[#1E293B]"></i>
+      <span className="text-[10px] font-bold text-[#1E293B] uppercase">Favoriten</span>
+    </div>
 
-          {/* Account */}
-          <div className="flex flex-col items-center gap-1 opacity-40 hover:opacity-100 transition-all cursor-pointer">
-            <span className="text-2xl">👤</span>
-            <span className="text-[10px] font-bold text-[#1E293B] uppercase tracking-tighter">Account</span>
-          </div>
+    {/* Account */}
+    <div className="flex flex-col items-center gap-1 opacity-40 hover:opacity-100 transition-all">
+      <i className="bi bi-person text-2xl text-[#1E293B]"></i>
+      <span className="text-[10px] font-bold text-[#1E293B] uppercase">Account</span>
+    </div>
 
-        </div>
-      </nav>
+  </div>
+</nav>
     </div>
   );
 };
