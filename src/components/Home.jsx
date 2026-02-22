@@ -32,10 +32,36 @@ const Home = ({ onChatClick, onEventClick }) => {
     }
   }, []);
 
-  const events = [
-    { id: 1, title: "Flohmarkt am Mauerpark", date: "22.02.2026 Sonntag, 11:00", location: "Berlin", image: "https://images.unsplash.com/photo-1533900298318-6b8da08a523e?q=80&w=400" },
-    { id: 2, title: "Nachtflohmarkt", date: "21.02.2026 Samstag, 18:00", location: "München", image: "https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?q=80&w=400" },
-  ];
+const events = [
+  { 
+    id: 1, 
+    title: "Flohmarkt am Mauerpark", 
+    address: "Rosenplatz 33, 92224 Amberg", // Изменили с location на address
+    date: "22.02.2026 Sonntag, 11:00", 
+    time: "von 10:00 bis 14:00 (4 Stunden)", 
+    type: "Privat",
+    fee: "0€",
+    limit: "unbegrenzt",
+    topic: "General",
+    description: "Lorem ipsum dolor sit amet, consetetur sadipscing elitr...",
+    image: "https://images.unsplash.com/photo-1533900298318-6b8da08a523e?q=80&w=800",
+    organizer: "John Deo"
+  },
+  { 
+    id: 2, 
+    title: "Nachtflohmarkt", 
+    address: "Theresienwiese, München",
+    date: "21.02.2026 Samstag, 18:00", 
+    time: "von 18:00 bis 23:00",
+    type: "Gewerblich",
+    fee: "5€",
+    limit: "500",
+    topic: "Antiquitäten",
+    description: "Einzigartige Antiquitäten bei Nacht entdecken.",
+    image: "https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?q=80&w=800",
+    organizer: "Max Mustermann"
+  },
+];
 
   return (
     <div className="bg-[#F8FAFC] min-h-screen pb-28 font-sans relative">
@@ -73,24 +99,31 @@ const Home = ({ onChatClick, onEventClick }) => {
 
       {/* СПИСОК */}
 {/* СПИСОК */}
-      <section className="max-w-[1080px] mx-auto px-4 mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-        {events.map((event) => (
-          <div 
-            key={event.id} 
-            // ДОБАВЛЯЕМ ЭТУ СТРОКУ:
-            onClick={() => onEventClick(event)} 
-            // И добавляем cursor-pointer, чтобы пользователь видел, что это кнопка
-            className="bg-white rounded-[2.5rem] p-5 flex items-center gap-5 shadow-sm border border-slate-50 cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98] transition-transform"
-          >
-            <img src={event.image} className="w-24 h-24 rounded-[1.8rem] object-cover" alt="" />
-            <div>
-              <h3 className="text-[#1E293B] font-bold text-xl">{event.title}</h3>
-              <p className="text-[#52A7E0] font-medium text-sm"><i className="bi bi-calendar3 me-2"></i>{event.date}</p>
-              <p className="text-slate-900 font-bold text-sm mt-1 uppercase"><i className="bi bi-geo-alt-fill me-1"></i>{event.location}</p>
-            </div>
-          </div>
-        ))}
-      </section>
+{/* СПИСОК */}
+<section className="max-w-[1080px] mx-auto px-4 mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+  {events.map((event) => (
+    <div 
+      key={event.id} 
+      onClick={() => onEventClick(event)} 
+      className="bg-white rounded-[2.5rem] p-5 flex items-center gap-5 shadow-sm border border-slate-50 cursor-pointer hover:shadow-md transition-all active:scale-[0.98]"
+    >
+      <img src={event.image} className="w-24 h-24 rounded-[1.8rem] object-cover flex-shrink-0" alt="" />
+      <div>
+        <h3 className="text-[#1E293B] font-bold text-xl leading-tight mb-1">{event.title}</h3>
+        <p className="text-[#52A7E0] font-medium text-sm flex items-center gap-2">
+          <i className="bi bi-calendar3"></i>
+          {event.date}
+        </p>
+        
+        {/* ОСТАВЛЯЕМ ТОЛЬКО ЭТОТ БЛОК ДЛЯ ЛОКАЦИИ */}
+        <p className="text-slate-900 font-bold text-[13px] mt-1 uppercase flex items-center gap-2">
+          <i className="bi bi-geo-alt-fill text-[#1E293B]"></i>
+          {event.address || event.location}
+        </p>
+      </div>
+    </div>
+  ))}
+</section>
     </div>
   );
 };
