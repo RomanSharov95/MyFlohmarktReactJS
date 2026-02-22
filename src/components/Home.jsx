@@ -15,7 +15,7 @@ let DefaultIcon = L.icon({
 L.Marker.prototype.options.icon = DefaultIcon;
 
 // ВАЖНО: Добавили { onChatClick } в скобки ниже!
-const Home = ({ onChatClick }) => {
+const Home = ({ onChatClick, onEventClick }) => {
   const [position, setPosition] = useState([50.1109, 8.6821]); 
 
   function ChangeView({ center }) {
@@ -72,9 +72,16 @@ const Home = ({ onChatClick }) => {
       </section>
 
       {/* СПИСОК */}
+{/* СПИСОК */}
       <section className="max-w-[1080px] mx-auto px-4 mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
         {events.map((event) => (
-          <div key={event.id} className="bg-white rounded-[2.5rem] p-5 flex items-center gap-5 shadow-sm border border-slate-50">
+          <div 
+            key={event.id} 
+            // ДОБАВЛЯЕМ ЭТУ СТРОКУ:
+            onClick={() => onEventClick(event)} 
+            // И добавляем cursor-pointer, чтобы пользователь видел, что это кнопка
+            className="bg-white rounded-[2.5rem] p-5 flex items-center gap-5 shadow-sm border border-slate-50 cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98] transition-transform"
+          >
             <img src={event.image} className="w-24 h-24 rounded-[1.8rem] object-cover" alt="" />
             <div>
               <h3 className="text-[#1E293B] font-bold text-xl">{event.title}</h3>
