@@ -16,6 +16,7 @@ function App() {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isAdding, setIsAdding] = useState(null); // 'flohmarkt' или 'inserate'
   const [showSelection, setShowSelection] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   const renderPage = () => {
     // 1. Экран добавления
