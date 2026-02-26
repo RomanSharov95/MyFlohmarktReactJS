@@ -95,10 +95,10 @@ const renderPage = () => {
   return (
     <div className="App bg-[#F8FAFC] min-h-screen">
       <main>{renderPage()}</main>
-
-      {/* Навигация теперь видна ВСЕГДА, кроме режима чата или добавления */}
-     {!isAdding && !selectedEvent && !isChatOpen && (currentPage !== 'account' || isAuthenticated) && (
-        <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-100 z-[2000]">
+{/* Навигация видна ВСЕГДА, КРОМЕ режима чата, добавления или ПРОСМОТРА ТОВАРА */}
+      {}
+     {!isAdding && !selectedEvent && !selectedItem && !isChatOpen && (currentPage !== 'account' || isAuthenticated) && (
+      <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-100 z-[2000]">
           <div className="max-w-[1080px] mx-auto px-6 py-4 flex justify-between items-center">
             
             <div onClick={() => navigate('home')} className={`flex flex-col items-center gap-1 cursor-pointer ${currentPage === 'home' ? 'text-[#52A7E0]' : 'opacity-40'}`}>
