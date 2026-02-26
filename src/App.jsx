@@ -93,7 +93,43 @@ case 'account':
         </nav>
       )}
 
-      {/* ... модалка выбора создания остается без изменений ... */}
+{/* МОДАЛКА ВЫБОРА: Объявление или Барахолка */}
+{showSelection && (
+  <div className="fixed inset-0 z-[3000] flex items-end justify-center px-4 pb-24 bg-slate-900/40 backdrop-blur-sm" onClick={() => setShowSelection(false)}>
+    <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-in slide-in-from-bottom duration-300" onClick={e => e.stopPropagation()}>
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="text-xl font-bold text-slate-800">Was möchtest du erstellen?</h3>
+        <button onClick={() => setShowSelection(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+          <i className="bi bi-x-lg"></i>
+        </button>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        {/* Кнопка создания Барахолки */}
+        <button 
+          onClick={() => { setIsAdding('event'); setShowSelection(false); }}
+          className="flex flex-col items-center gap-3 p-6 rounded-2xl bg-blue-50 border-2 border-blue-100 hover:border-blue-400 transition-all group"
+        >
+          <div className="w-12 h-12 rounded-xl bg-blue-500 text-white flex items-center justify-center text-2xl shadow-lg group-active:scale-90">
+            <i className="bi bi-calendar-event"></i>
+          </div>
+          <span className="font-bold text-blue-900">Flohmarkt</span>
+        </button>
+
+        {/* Кнопка создания Объявления */}
+        <button 
+          onClick={() => { setIsAdding('item'); setShowSelection(false); }}
+          className="flex flex-col items-center gap-3 p-6 rounded-2xl bg-orange-50 border-2 border-orange-100 hover:border-orange-400 transition-all group"
+        >
+          <div className="w-12 h-12 rounded-xl bg-orange-500 text-white flex items-center justify-center text-2xl shadow-lg group-active:scale-90">
+            <i className="bi bi-tag"></i>
+          </div>
+          <span className="font-bold text-orange-900">Inserat</span>
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 }
