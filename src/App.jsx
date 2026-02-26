@@ -6,8 +6,8 @@ import Account from './components/Account';
 import Nachrichten from './components/Nachrichten';
 import AddItem from './components/AddItem';
 import FlohmarktView from './components/FlohmarktView';
-import Auth from './components/Auth'; // ВАЖНО: Добавьте этот импорт!
-
+import Auth from './components/Auth'; 
+import ItemView from './components/ItemView';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import 'leaflet/dist/leaflet.css';
 
@@ -19,6 +19,7 @@ function App() {
   const [isAdding, setIsAdding] = useState(null); 
   const [showSelection, setShowSelection] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
 
   const navigate = (page) => {
     setCurrentPage(page);
@@ -27,29 +28,67 @@ function App() {
     setIsAdding(null);
   };
 
-  const renderPage = () => {
-    // Режимы добавления или просмотра деталей перекрывают всё (кроме входа)
-    if (isAdding) return <AddItem type={isAdding} onCancel={() => setIsAdding(null)} onSave={() => setIsAdding(null)} />;
-    if (selectedEvent) return <FlohmarktView event={selectedEvent} onBack={() => setSelectedEvent(null)} />;
+const renderPage = () => {
+    // 1. Приоритетные экраны (Модальные окна/Детали), которые перекрывают основную навигацию
+    if (isAdding) {
+      return (
+        <AddItem 
+          type={isAdding} 
+          onCancel={() => setIsAdding(null)} 
+          onSave={() => setIsAdding(null)} 
+        />
+      );
+    }
 
+    if (selectedEvent) {
+      return (
+        <FlohmarktView 
+          event={selectedEvent} 
+          onBack={() => setSelectedEvent(null)} 
+        />
+      );
+    }
+
+    if (selectedItem) {
+      return (
+        <ItemView 
+          item={selectedItem} 
+          onBack={() => setSelectedItem(null)} 
+          onChatClick={(item) => {
+            setSelectedItem(null);
+            navigate('messages');
+          }} 
+        />
+      );
+    }
+
+    // 2. Основные страницы переключаемые через Bottom Nav
     switch (currentPage) {
-      case 'home': return <Home onEventClick={setSelectedEvent} onChatClick={() => navigate('messages')} />;
-      case 'inserate': return <Inserate onChatClick={() => navigate('messages')} />;
-      case 'favorite': return <Favorite />;
-      case 'messages': return <Nachrichten onChatStateChange={setIsChatOpen} />;
+      case 'home': 
+        return <Home onEventClick={setSelectedEvent} onChatClick={() => navigate('messages')} />;
       
-      // ВОТ ТУТ МАГИЯ: экран входа появляется только для аккаунта
-// Внутри renderPage, в блоке switch:
-case 'account': 
-  return isAuthenticated ? (
-    <Account />
-  ) : (
-    <Auth 
-      onLogin={() => setIsAuthenticated(true)} 
-      onBackToHome={() => navigate('home')} // Теперь кнопка сверху вернет на главную
-    />
-  );
-      default: return <Home onEventClick={setSelectedEvent} onChatClick={() => navigate('messages')} />;
+      case 'inserate': 
+        // ВАЖНО: Добавили onItemClick, чтобы открывать просмотр товара
+        return <Inserate onItemClick={setSelectedItem} onChatClick={() => navigate('messages')} />;
+      
+      case 'favorite': 
+        return <Favorite />;
+      
+      case 'messages': 
+        return <Nachrichten onChatStateChange={setIsChatOpen} />;
+      
+      case 'account': 
+        return isAuthenticated ? (
+          <Account />
+        ) : (
+          <Auth 
+            onLogin={() => setIsAuthenticated(true)} 
+            onBackToHome={() => navigate('home')} 
+          />
+        );
+
+      default: 
+        return <Home onEventClick={setSelectedEvent} onChatClick={() => navigate('messages')} />;
     }
   };
 
