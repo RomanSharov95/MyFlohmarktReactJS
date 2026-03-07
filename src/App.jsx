@@ -1,8 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { auth } from './firebase'; 
-import { onAuthStateChanged } from "firebase/auth";
-
-// ИМПОРТЫ КОМПОНЕНТОВ
+import React, { useReducer } from 'react';
 import Home from './components/Home';
 import Inserate from './components/Inserate';
 import Favorite from './components/Favorite';
@@ -11,145 +7,301 @@ import Nachrichten from './components/Nachrichten';
 import AddItem from './components/AddItem';
 import FlohmarktView from './components/FlohmarktView';
 import Auth from './components/Auth';
-
-// СТИЛИ
+import ItemView from './components/ItemView';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import 'leaflet/dist/leaflet.css';
 
+// ─── State Shape ─────────────────────────────────────────────────────────────
+const initialState = {
+  isAuthenticated: false,
+  currentPage: 'home',
+  selectedEvent: null,
+  selectedItem: null,
+  isAdding: null,       // 'event' | 'item' | null
+  showSelection: false,
+  isChatOpen: false,
+};
+
+// ─── Reducer ──────────────────────────────────────────────────────────────────
+function appReducer(state, action) {
+  switch (action.type) {
+
+    case 'NAVIGATE':
+      // Navigate to a main page and reset all overlay/modal states
+      return {
+        ...state,
+        currentPage: action.page,
+        selectedEvent: null,
+        selectedItem: null,
+        isAdding: null,
+        isChatOpen: false,
+      };
+
+    case 'LOGIN':
+      return { ...state, isAuthenticated: true };
+
+    case 'SELECT_EVENT':
+      return { ...state, selectedEvent: action.event };
+
+    case 'CLEAR_EVENT':
+      return { ...state, selectedEvent: null };
+
+    case 'SELECT_ITEM':
+      return { ...state, selectedItem: action.item };
+
+    case 'CLEAR_ITEM':
+      return { ...state, selectedItem: null };
+
+    case 'START_ADDING':
+      // 'event' or 'item'
+      return { ...state, isAdding: action.kind, showSelection: false };
+
+    case 'STOP_ADDING':
+      return { ...state, isAdding: null };
+
+    case 'SHOW_SELECTION':
+      return { ...state, showSelection: true };
+
+    case 'HIDE_SELECTION':
+      return { ...state, showSelection: false };
+
+    case 'SET_CHAT_OPEN':
+      return { ...state, isChatOpen: action.open };
+
+    default:
+      return state;
+  }
+}
+
+// ─── PageRouter ───────────────────────────────────────────────────────────────
+// Renders the correct screen based on current app state.
+// Priority order: AddItem → FlohmarktView → ItemView → main pages
+function PageRouter({ state, dispatch }) {
+  const navigate = (page) => dispatch({ type: 'NAVIGATE', page });
+
+  // 1. Overlay screens – these take priority over the bottom navigation
+  if (state.isAdding) {
+    return (
+      <AddItem
+        type={state.isAdding}
+        onCancel={() => dispatch({ type: 'STOP_ADDING' })}
+        onSave={() => dispatch({ type: 'STOP_ADDING' })}
+      />
+    );
+  }
+
+  if (state.selectedEvent) {
+    return (
+      <FlohmarktView
+        event={state.selectedEvent}
+        onBack={() => dispatch({ type: 'CLEAR_EVENT' })}
+      />
+    );
+  }
+
+  if (state.selectedItem) {
+    return (
+      <ItemView
+        item={state.selectedItem}
+        onBack={() => dispatch({ type: 'CLEAR_ITEM' })}
+        onChatClick={() => {
+          dispatch({ type: 'CLEAR_ITEM' });
+          navigate('messages');
+        }}
+      />
+    );
+  }
+
+  // 2. Main pages – switched via bottom navigation
+  switch (state.currentPage) {
+    case 'home':
+      return (
+        <Home
+          onEventClick={(event) => dispatch({ type: 'SELECT_EVENT', event })}
+          onChatClick={() => navigate('messages')}
+        />
+      );
+
+    case 'inserate':
+      return (
+        <Inserate
+          onItemClick={(item) => dispatch({ type: 'SELECT_ITEM', item })}
+          onChatClick={() => navigate('messages')}
+        />
+      );
+
+    case 'favorite':
+      return <Favorite />;
+
+    case 'messages':
+      return (
+        <Nachrichten
+          onChatStateChange={(open) => dispatch({ type: 'SET_CHAT_OPEN', open })}
+        />
+      );
+
+    case 'account':
+      return state.isAuthenticated ? (
+        <Account />
+      ) : (
+        <Auth
+          onLogin={() => dispatch({ type: 'LOGIN' })}
+          onBackToHome={() => navigate('home')}
+        />
+      );
+
+    default:
+      return (
+        <Home
+          onEventClick={(event) => dispatch({ type: 'SELECT_EVENT', event })}
+          onChatClick={() => navigate('messages')}
+        />
+      );
+  }
+}
+
+// ─── App ──────────────────────────────────────────────────────────────────────
 function App() {
-  const [user, setUser] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [currentPage, setCurrentPage] = useState('home');
-  const [selectedEvent, setSelectedEvent] = useState(null);
-  const [isAdding, setIsAdding] = useState(null); 
-  const [showSelection, setShowSelection] = useState(false);
-  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [state, dispatch] = useReducer(appReducer, initialState);
+  const navigate = (page) => dispatch({ type: 'NAVIGATE', page });
 
-  // Слушаем состояние авторизации
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      if (firebaseUser) {
-        setUser(firebaseUser);
-        setIsAuthenticated(true);
-      } else {
-        setUser(null);
-        setIsAuthenticated(false);
-      }
-    });
-    return () => unsubscribe();
-  }, []);
-
-  const navigate = (page) => {
-    setCurrentPage(page);
-    setIsChatOpen(false);
-    setSelectedEvent(null);
-    setIsAdding(null);
-    setShowSelection(false);
-  };
-
-  const renderPage = () => {
-    // 1. Если идет процесс добавления товара/маркета
-    if (isAdding) {
-      return <AddItem type={isAdding} onCancel={() => setIsAdding(null)} onSave={() => setIsAdding(null)} />;
-    }
-    
-    // 2. Если открыт конкретный фломаркт
-    if (selectedEvent) {
-      return <FlohmarktView event={selectedEvent} onBack={() => setSelectedEvent(null)} />;
-    }
-
-    // 3. Основная навигация
-    switch (currentPage) {
-      case 'home': 
-        return <Home onEventClick={setSelectedEvent} onChatClick={() => navigate('messages')} />;
-      case 'inserate': 
-        return <Inserate onChatClick={() => navigate('messages')} />;
-      case 'favorite': 
-        return <Favorite />;
-      case 'messages': 
-        return <Nachrichten onChatStateChange={setIsChatOpen} />;
-      case 'account': 
-        return isAuthenticated ? (
-          <Account user={user} />
-        ) : (
-          <Auth 
-            onLogin={() => {
-              setIsAuthenticated(true);
-              navigate('home');
-            }} 
-            onBackToHome={() => navigate('home')} 
-          />
-        );
-      default: 
-        return <Home onEventClick={setSelectedEvent} onChatClick={() => navigate('messages')} />;
-    }
-  };
+  // Bottom nav is hidden when: an overlay is active, chat is open,
+  // or the user is on the account page but not yet authenticated
+  const showNav =
+    !state.isAdding &&
+    !state.selectedEvent &&
+    !state.selectedItem &&
+    !state.isChatOpen &&
+    (state.currentPage !== 'account' || state.isAuthenticated);
 
   return (
     <div className="App bg-[#F8FAFC] min-h-screen">
-      <main className="pb-24"> {/* Добавили отступ снизу, чтобы меню не перекрывало контент */}
-        {renderPage()}
+      <main>
+        <PageRouter state={state} dispatch={dispatch} />
       </main>
 
-      {/* Навигация видна только если не открыт чат, добавление или просмотр деталей */}
-     {!isAdding && !selectedEvent && !isChatOpen && (currentPage !== 'account' || isAuthenticated) && (
-        <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-100 z-[2000] pb-safe">
+      {/* ── Bottom Navigation ── */}
+      {showNav && (
+        <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-100 z-[2000]">
           <div className="max-w-[1080px] mx-auto px-6 py-4 flex justify-between items-center">
-            
-            <div onClick={() => navigate('home')} className={`flex flex-col items-center gap-1 cursor-pointer ${currentPage === 'home' ? 'text-[#52A7E0]' : 'opacity-40'}`}>
-              <div className={`px-4 py-1.5 rounded-2xl ${currentPage === 'home' ? 'bg-[#52A7E0] text-white shadow-sm' : ''}`}><i className="bi bi-house-door-fill text-lg"></i></div>
-              <span className="text-[10px] font-bold uppercase tracking-tighter text-center">Flohmärkte</span>
-            </div>
 
-            <div onClick={() => navigate('inserate')} className={`flex flex-col items-center gap-1 cursor-pointer ${currentPage === 'inserate' ? 'text-[#52A7E0]' : 'opacity-40'}`}>
-              <div className={`px-4 py-1.5 rounded-2xl ${currentPage === 'inserate' ? 'bg-[#52A7E0] text-white shadow-sm' : ''}`}><i className="bi bi-tag-fill text-lg"></i></div>
-              <span className="text-[10px] font-bold uppercase tracking-tighter text-center">Inserate</span>
-            </div>
+            <NavItem
+              icon="house-door-fill"
+              label="Flohmärkte"
+              active={state.currentPage === 'home'}
+              onClick={() => navigate('home')}
+            />
 
+            <NavItem
+              icon="tag-fill"
+              label="Inserate"
+              active={state.currentPage === 'inserate'}
+              onClick={() => navigate('inserate')}
+            />
+
+            {/* Center add button */}
             <div className="relative -top-3">
-              <button onClick={() => setShowSelection(true)} className="bg-[#3D5A80] text-white w-16 h-16 rounded-full flex items-center justify-center shadow-xl border-4 border-white text-3xl active:scale-90 transition-all">
-                <i className="bi bi-plus-lg"></i>
+              <button
+                onClick={() => dispatch({ type: 'SHOW_SELECTION' })}
+                className="bg-[#3D5A80] text-white w-16 h-16 rounded-full flex items-center justify-center shadow-xl border-4 border-white text-3xl active:scale-90 transition-all"
+              >
+                <i className="bi bi-plus-lg" />
               </button>
             </div>
 
-            <div onClick={() => navigate('favorite')} className={`flex flex-col items-center gap-1 cursor-pointer ${currentPage === 'favorite' ? 'text-[#52A7E0]' : 'opacity-40'}`}>
-              <div className={`px-4 py-1.5 rounded-2xl ${currentPage === 'favorite' ? 'bg-[#52A7E0] text-white shadow-sm' : ''}`}><i className="bi bi-heart-fill text-lg"></i></div>
-              <span className="text-[10px] font-bold uppercase tracking-tighter text-center">Favoriten</span>
-            </div>
+            <NavItem
+              icon="heart-fill"
+              label="Favoriten"
+              active={state.currentPage === 'favorite'}
+              onClick={() => navigate('favorite')}
+            />
 
-            <div onClick={() => navigate('account')} className={`flex flex-col items-center gap-1 cursor-pointer ${currentPage === 'account' ? 'text-[#52A7E0]' : 'opacity-40'}`}>
-              <div className={`px-4 py-1.5 rounded-2xl ${currentPage === 'account' ? 'bg-[#52A7E0] text-white shadow-sm' : ''}`}><i className="bi bi-person-fill text-lg"></i></div>
-              <span className="text-[10px] font-bold uppercase tracking-tighter text-center">Account</span>
-            </div>
+            <NavItem
+              icon="person-fill"
+              label="Account"
+              active={state.currentPage === 'account'}
+              onClick={() => navigate('account')}
+            />
 
           </div>
         </nav>
       )}
 
-      {/* Модалка выбора (AddItem) */}
-      {showSelection && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[3000] flex items-end justify-center p-6 animate-in fade-in duration-200">
-          <div className="w-full max-w-sm bg-white rounded-3xl p-6 space-y-3 animate-in slide-in-from-bottom duration-300">
-            <h3 className="text-xl font-black text-slate-800 mb-4 text-center">Was möchtest du erstellen?</h3>
-            <button 
-              onClick={() => { setIsAdding('market'); setShowSelection(false); }}
-              className="w-full py-4 bg-slate-50 hover:bg-slate-100 rounded-2xl flex items-center px-6 gap-4 transition-colors"
-            >
-              <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center text-xl"><i className="bi bi-shop"></i></div>
-              <div className="text-left"><p className="font-bold text-slate-800">Flohmarkt</p><p className="text-xs text-slate-500">In deinem Garten/Garage</p></div>
-            </button>
-            <button 
-              onClick={() => { setIsAdding('item'); setShowSelection(false); }}
-              className="w-full py-4 bg-slate-50 hover:bg-slate-100 rounded-2xl flex items-center px-6 gap-4 transition-colors"
-            >
-              <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center text-xl"><i className="bi bi-box-seam"></i></div>
-              <div className="text-left"><p className="font-bold text-slate-800">Einzelnes Inserat</p><p className="text-xs text-slate-500">T-Shirt, Spielzeug, Möbel...</p></div>
-            </button>
-            <button onClick={() => setShowSelection(false)} className="w-full py-4 text-slate-400 font-bold text-sm uppercase tracking-widest pt-4">Abbrechen</button>
+      {/* ── Create Modal: choose between Flohmarkt or Inserat ── */}
+      {state.showSelection && (
+        <div
+          className="fixed inset-0 z-[3000] flex items-end justify-center px-4 pb-24 bg-slate-900/40 backdrop-blur-sm"
+          onClick={() => dispatch({ type: 'HIDE_SELECTION' })}
+        >
+          <div
+            className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-in slide-in-from-bottom duration-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-slate-800">Was möchtest du erstellen?</h3>
+              <button
+                onClick={() => dispatch({ type: 'HIDE_SELECTION' })}
+                className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+              >
+                <i className="bi bi-x-lg" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <CreateButton
+                icon="calendar-event"
+                label="Flohmarkt"
+                color="blue"
+                onClick={() => dispatch({ type: 'START_ADDING', kind: 'event' })}
+              />
+              <CreateButton
+                icon="tag"
+                label="Inserat"
+                color="orange"
+                onClick={() => dispatch({ type: 'START_ADDING', kind: 'item' })}
+              />
+            </div>
           </div>
         </div>
       )}
     </div>
+  );
+}
+
+// ─── Small Reusable Components ────────────────────────────────────────────────
+
+// Single item in the bottom navigation bar
+function NavItem({ icon, label, active, onClick }) {
+  return (
+    <div
+      onClick={onClick}
+      className={`flex flex-col items-center gap-1 cursor-pointer ${active ? 'text-[#52A7E0]' : 'opacity-40'}`}
+    >
+      <div className={`px-4 py-1.5 rounded-2xl ${active ? 'bg-[#52A7E0] text-white shadow-sm' : ''}`}>
+        <i className={`bi bi-${icon} text-lg`} />
+      </div>
+      <span className="text-[10px] font-bold uppercase tracking-tighter text-center">{label}</span>
+    </div>
+  );
+}
+
+// Button inside the "create" modal
+function CreateButton({ icon, label, color, onClick }) {
+  const colors = {
+    blue:   { wrap: 'bg-blue-50 border-blue-100 hover:border-blue-400',     icon: 'bg-blue-500',   text: 'text-blue-900' },
+    orange: { wrap: 'bg-orange-50 border-orange-100 hover:border-orange-400', icon: 'bg-orange-500', text: 'text-orange-900' },
+  };
+  const c = colors[color];
+  return (
+    <button
+      onClick={onClick}
+      className={`flex flex-col items-center gap-3 p-6 rounded-2xl border-2 transition-all group ${c.wrap}`}
+    >
+      <div className={`w-12 h-12 rounded-xl text-white flex items-center justify-center text-2xl shadow-lg group-active:scale-90 ${c.icon}`}>
+        <i className={`bi bi-${icon}`} />
+      </div>
+      <span className={`font-bold ${c.text}`}>{label}</span>
+    </button>
   );
 }
 
