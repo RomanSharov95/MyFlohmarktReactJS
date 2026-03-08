@@ -1,0 +1,80 @@
+import { useState, useEffect } from 'react';
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+} from 'firebase/auth';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { auth, db } from '../firebase';
+
+// ─── useAuth ──────────────────────────────────────────────────────────────────
+// Provides authentication state and actions (register, login, logout).
+// Usage: const { user, loading, register, login, logout } = useAuth();
+export function useAuth() {
+  const [user, setUser]       = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError]     = useState(null);
+
+  // Listen for auth state changes (e.g. page refresh keeps user logged in)
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      setUser(firebaseUser);
+      setLoading(false);
+    });
+    return unsubscribe; // cleanup listener on unmount
+  }, []);
+
+  // Register a new user and create their Firestore profile
+  const register = async (email, password) => {
+    setError(null);
+    try {
+      const { user: newUser } = await createUserWithEmailAndPassword(auth, email, password);
+
+      // Create a user document in Firestore
+      await setDoc(doc(db, 'users', newUser.uid), {
+        email:     newUser.email,
+        createdAt: serverTimestamp(),
+        favorites: [],
+      });
+
+      return newUser;
+    } catch (err) {
+      setError(getErrorMessage(err.code));
+      throw err;
+    }
+  };
+
+  // Log in an existing user
+  const login = async (email, password) => {
+    setError(null);
+    try {
+      const { user: loggedIn } = await signInWithEmailAndPassword(auth, email, password);
+      return loggedIn;
+    } catch (err) {
+      setError(getErrorMessage(err.code));
+      throw err;
+    }
+  };
+
+  // Log out the current user
+  const logout = async () => {
+    await signOut(auth);
+    setUser(null);
+  };
+
+  return { user, loading, error, register, login, logout };
+}
+
+// ─── Helper: convert Firebase error codes to German messages ─────────────────
+function getErrorMessage(code) {
+  const messages = {
+    'auth/email-already-in-use':  'Diese E-Mail wird bereits verwendet.',
+    'auth/invalid-email':         'Ungültige E-Mail-Adresse.',
+    'auth/weak-password':         'Passwort muss mindestens 6 Zeichen lang sein.',
+    'auth/user-not-found':        'Kein Konto mit dieser E-Mail gefunden.',
+    'auth/wrong-password':        'Falsches Passwort.',
+    'auth/too-many-requests':     'Zu viele Versuche. Bitte warte kurz.',
+  };
+  return messages[code] || 'Ein Fehler ist aufgetreten. Bitte versuche es erneut.';
+}
