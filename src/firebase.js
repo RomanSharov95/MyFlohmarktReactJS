@@ -2,19 +2,16 @@ import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
-// Firebase project configuration
-// Values are loaded from environment variables (.env file)
 const firebaseConfig = {
-  apiKey:            import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain:        import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId:         import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket:     import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId:             import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId:     import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
+  apiKey: "AIzaSyAGwAj8vban7p4WeJw3Lz3abe2M6XddNw8",
+  authDomain: "myflohmarkt-10216.firebaseapp.com",
+  projectId: "myflohmarkt-10216",
+  storageBucket: "myflohmarkt-10216.firebasestorage.app",
+  messagingSenderId: "229533528982",
+  appId: "1:229533528982:web:e42906d60f455e75d623b7",
+  measurementId: "G-NRDLDH5ZMF"
 };
 
-const app  = initializeApp(firebaseConfig);
-
+const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
-export const db   = getFirestore(app);
+export const db = getFirestore(app);
