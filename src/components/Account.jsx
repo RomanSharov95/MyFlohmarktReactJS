@@ -10,7 +10,7 @@ const Account = () => {
       <header className="w-full bg-white shadow-sm sticky top-0 z-50">
         <div className="max-w-[1080px] mx-auto px-4 py-4 flex items-center justify-between">
            <div className="w-10 h-10">
-              <img src="/icon.png" alt="Logo" className="w-full h-full object-contain" />
+              <img src="icon.png" alt="Logo" className="w-full h-full object-contain" />
            </div>
            <h1 className="text-xl font-black text-[#1E293B]">Mein Profil</h1>
            <button className="text-[#52A7E0] text-2xl">
